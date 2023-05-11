@@ -9,7 +9,9 @@ import requests
 import os
 from django.conf import settings
 from rest_framework import status
-
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from api.models import User
 @csrf_exempt
 def google_login(request):
         data = json.loads(request.body)
@@ -36,4 +38,22 @@ def google_login(request):
 
         email_req_json = email_req.json()
         email = email_req_json.get('email')
-        return JsonResponse({'email': email_req_json})
+        try:
+            user = User.objects.get(mail=email)
+            user.access_token = access_token
+            user.save()
+            return JsonResponse({'email': email_req_json, 'new' : "기존회원"})
+        except User.DoesNotExist:
+            new_user = User(name=email_req_json.get('name'), mail=email, g_id=email_req_json.get('id'), access_token=access_token)
+            new_user.save()
+            return JsonResponse({'email': email_req_json, 'new' : "신입회원"})
+
+
+@api_view(['GET'])
+def get_youtube_list(request):
+    user = User.objects.get()
+    access_token = user.access_token
+    print(access_token)
+    response = requests.get(f"https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true&access_token={access_token}")
+    response_dict = response.json()
+    return Response(response_dict)
