@@ -29,6 +29,7 @@ def google_login(request):
             return JsonResponse({'err_msg': error, 'token' : code})
 
         access_token = token_req_json.get('access_token')
+        print(access_token)
 
         email_req = requests.get(f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}")
         email_req_status = email_req.status_code
@@ -42,18 +43,24 @@ def google_login(request):
             user = User.objects.get(mail=email)
             user.access_token = access_token
             user.save()
-            return JsonResponse({'email': email_req_json, 'new' : "기존회원"})
+            return JsonResponse({'email': email_req_json, 'new' : "기존회원", 'token': access_token})
         except User.DoesNotExist:
             new_user = User(name=email_req_json.get('name'), mail=email, g_id=email_req_json.get('id'), access_token=access_token)
             new_user.save()
             return JsonResponse({'email': email_req_json, 'new' : "신입회원"})
 
-
-@api_view(['GET'])
+@csrf_exempt
 def get_youtube_list(request):
-    user = User.objects.get()
-    access_token = user.access_token
-    print(access_token)
-    response = requests.get(f"https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true&access_token={access_token}")
-    response_dict = response.json()
-    return Response(response_dict)
+    # 액세스 토큰 가져오기
+    access_token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+
+    # 유튜브 API 요청 보내기
+    response = requests.get('https://www.googleapis.com/youtube/v3/search', params={
+        'part': 'snippet',
+        'channelId' : 'UCfkB07bG6AWCS2NSz8BZCkw',
+        'access_token': access_token,
+    })
+
+    # 유튜브 API 응답 처리
+    youtube_list = response.json()
+    return JsonResponse(youtube_list)
