@@ -50,17 +50,47 @@ def google_login(request):
             return JsonResponse({'email': email_req_json, 'new' : "신입회원"})
 
 @csrf_exempt
+def get_channel_id(request):
+    access_token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+
+    response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
+          'part': 'snippet',
+          'mine': True,
+          'access_token': access_token,
+     })
+    
+    channel_id = response.json()['items'][0]['id']
+    return JsonResponse({'channel_id': channel_id})
+
+@csrf_exempt
 def get_youtube_list(request):
     # 액세스 토큰 가져오기
     access_token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
 
     # 유튜브 API 요청 보내기
-    response = requests.get('https://www.googleapis.com/youtube/v3/search', params={
+    response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
         'part': 'snippet',
-        'channelId' : 'UCfkB07bG6AWCS2NSz8BZCkw',
+        # channelID에 프론트에서 보내주는 channelID 들어가면 된다.
+        'channelId' : 'UCfkB07bG6AWCS2NSz8BZCk', 
         'access_token': access_token,
     })
 
     # 유튜브 API 응답 처리
     youtube_list = response.json()
     return JsonResponse(youtube_list)
+
+@csrf_exempt
+def get_comment_list(request):
+    # 액세스 토큰 가져오기
+    access_token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+
+    # 유튜브 API 요청 보내기
+    response = requests.get('https://www.googleapis.com/youtube/v3/commentThreads', params={
+        'part': 'snippet',
+        'videoId' : 'eojiSgzA3hU', 
+        'access_token': access_token,
+    })
+
+    # 유튜브 API 응답 처리
+    comment_list = response.json()
+    return JsonResponse(comment_list)
