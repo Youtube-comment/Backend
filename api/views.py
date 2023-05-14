@@ -12,6 +12,81 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
+import jwt
+from django.http import JsonResponse
+
+# @csrf_exempt
+# def get_user(request):
+#     # Get the token from the request headers
+#     token = request.META.get('HTTP_AUTHORIZATION', None)
+#     if not token:
+#         return JsonResponse({'error': 'No token provided'}, status=401)
+
+#     # Decode the token and retrieve the user ID from the payload
+#     try:
+#         payload = jwt.decode(token, 'your-secret-key', algorithms=['HS256'])
+#         user_id = payload['user_id']
+#     except jwt.ExpiredSignatureError:
+#         return JsonResponse({'error': 'Token expired'}, status=401)
+#     except jwt.InvalidTokenError:
+#         return JsonResponse({'error': 'Invalid token'}, status=401)
+
+#     # Retrieve the user object based on the user ID
+#     try:
+#         user = User.objects.get(id=user_id)
+#     except User.DoesNotExist:
+#         return JsonResponse({'error': 'User not found'}, status=401)
+
+#     # Return the user object
+#     return JsonResponse({'user': user.username})
+@csrf_exempt
+def get_channel_id(request):
+    token = request
+    print(token)
+    # if not token:
+    #     return JsonResponse({'error': 'No token provided'}, status=401)
+
+    # # Decode the token and retrieve the user ID from the payload
+    # try:
+    #     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+    #     user_id = payload['g_id']
+    #     user_mail = payload['mail']
+    # except jwt.ExpiredSignatureError:
+    #     return JsonResponse({'error': 'Token expired'}, status=401) 
+    # except jwt.InvalidTokenError:
+    #     return JsonResponse({'error': 'Invalid token'}, status=402)
+
+    # # Retrieve the user object based on the user ID
+    # try:
+    #     user = User.objects.get(g_id=user_id)
+    # except User.DoesNotExist:
+    #     return JsonResponse({'error': 'User not found'}, status=403)
+
+
+
+    response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
+          'access_token': token,
+          'part': 'snippet',
+          'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
+          'mine': True,
+          
+     })
+    
+    channel_id = response.json()
+    return channel_id.get('items')[0]['id']
+
+@csrf_exempt
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    refresh['g_id'] = user.g_id
+    refresh['mail'] = user.mail
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
 @csrf_exempt
 def google_login(request):
         data = json.loads(request.body)
@@ -29,7 +104,6 @@ def google_login(request):
             return JsonResponse({'err_msg': error, 'token' : code})
 
         access_token = token_req_json.get('access_token')
-        print(access_token)
 
         email_req = requests.get(f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}")
         email_req_status = email_req.status_code
@@ -43,52 +117,94 @@ def google_login(request):
             user = User.objects.get(mail=email)
             user.access_token = access_token
             user.save()
-            return JsonResponse({'email': email_req_json, 'new' : "기존회원", 'token': access_token})
+            jwt = get_tokens_for_user(user)
+            channel_id = get_channel_id(access_token)
+            user.channel_id = channel_id
+            user.save()
+            print(channel_id)
+            return JsonResponse({'email': email_req_json, 'new' : "기존회원",  "jwt" : jwt, "access" : channel_id})
         except User.DoesNotExist:
-            new_user = User(name=email_req_json.get('name'), mail=email, g_id=email_req_json.get('id'), access_token=access_token)
+            new_user = User(name=email_req_json.get('name'), mail=email, g_id=email_req_json.get('id'), access_token=access_token, channel_id = "")
             new_user.save()
-            return JsonResponse({'email': email_req_json, 'new' : "신입회원"})
+            channel_id = get_channel_id(access_token)
+            new_user.channel_id = channel_id
+            new_user.save()
+            jwt = get_tokens_for_user(user)
+            return JsonResponse({'email': email_req_json, 'new' : "신입회원", "jwt" : jwt})
 
-@csrf_exempt
-def get_channel_id(request):
-    access_token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+        
 
-    response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
-          'part': 'snippet',
-          'mine': True,
-          'access_token': access_token,
-     })
-    
-    channel_id = response.json()['items'][0]['id']
-    return JsonResponse({'channel_id': channel_id})
 
 @csrf_exempt
 def get_youtube_list(request):
-    # 액세스 토큰 가져오기
-    access_token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+    # Get the access token
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+    if not token:
+        return JsonResponse({'error': 'No token provided'}, status=401)
 
-    # 유튜브 API 요청 보내기
+    # Decode the token and retrieve the user ID and email from the payload
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = payload['g_id']
+        user_mail = payload['mail']
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'Token expired'}, status=401) 
+    except jwt.InvalidTokenError:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    # Retrieve the user object based on the user ID
+    try:
+        user = User.objects.get(g_id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=401)
+
+    # Send a request to the YouTube API to retrieve the list of videos uploaded by the user
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
-        'part': 'snippet',
-        # channelID에 프론트에서 보내주는 channelID 들어가면 된다.
-        'channelId' : 'UCfkB07bG6AWCS2NSz8BZCk', 
-        'access_token': access_token,
+        'part': 'contentDetails',
+        'id': user.channel_id,
+        'access_token': user.access_token,
     })
 
-    # 유튜브 API 응답 처리
-    youtube_list = response.json()
-    return JsonResponse(youtube_list)
+    # Process the response from the YouTube 
+    try:
+        youtube_list = response.json()['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+        response2 = requests.get('https://www.googleapis.com/youtube/v3/playlistItems', params={
+        'part': 'snippet',
+        'playlistId': youtube_list,
+        'access_token': user.access_token,
+    })
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=401)
+    return JsonResponse(response2.json())
 
 @csrf_exempt
 def get_comment_list(request):
     # 액세스 토큰 가져오기
-    access_token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+    if not token:
+        return JsonResponse({'error': 'No token provided'}, status=401)
+
+    # Decode the token and retrieve the user ID from the payload
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = payload['g_id']
+        user_mail = payload['mail']
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'Token expired'}, status=401) 
+    except jwt.InvalidTokenError:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    # Retrieve the user object based on the user ID
+    try:
+        user = User.objects.get(g_id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=401)
 
     # 유튜브 API 요청 보내기
     response = requests.get('https://www.googleapis.com/youtube/v3/commentThreads', params={
         'part': 'snippet',
-        'videoId' : 'eojiSgzA3hU', 
-        'access_token': access_token,
+        'videoId' : 'RYLWTyAq5cc',  #프론트에서 다시 videoId 돌려 받아야함
+        'access_token': user.access_token,
     })
 
     # 유튜브 API 응답 처리
