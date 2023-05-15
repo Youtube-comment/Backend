@@ -146,7 +146,6 @@ def get_youtube_list(request):
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
         user_id = payload['g_id']
-        user_mail = payload['mail']
     except jwt.ExpiredSignatureError:
         return JsonResponse({'error': 'Token expired'}, status=401) 
     except jwt.InvalidTokenError:
@@ -204,6 +203,41 @@ def get_comment_list(request):
     response = requests.get('https://www.googleapis.com/youtube/v3/commentThreads', params={
         'part': 'snippet',
         'videoId' : 'RYLWTyAq5cc',  #프론트에서 다시 videoId 돌려 받아야함
+        'textFormat': 'plainText',
+        'access_token': user.access_token,
+    })
+
+    # 유튜브 API 응답 처리
+    comment_list = response.json()
+    return JsonResponse(comment_list)
+
+@csrf_exempt
+def get_recomment_list(request):
+    # 액세스 토큰 가져오기
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+    if not token:
+        return JsonResponse({'error': 'No token provided'}, status=401)
+
+    # Decode the token and retrieve the user ID from the payload
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = payload['g_id']
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'Token expired'}, status=401) 
+    except jwt.InvalidTokenError:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    # Retrieve the user object based on the user ID
+    try:
+        user = User.objects.get(g_id=user_id)
+        print(user.access_token)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=401)
+
+    # 유튜브 API 요청 보내기
+    response = requests.get('https://www.googleapis.com/youtube/v3/comments', params={
+        'part': 'snippet',
+        "parentId": "Ugwc8MjIjYlmOubAqbd4AaABAg",  #프론트에서 다시 videoId 돌려 받아야함
         'access_token': user.access_token,
     })
 

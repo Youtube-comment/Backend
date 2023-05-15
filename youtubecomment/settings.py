@@ -28,7 +28,7 @@ environ.Env.read_env(
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
-ALLOWED_HOSTS = ['15.164.76.145', 'example.com', 'www.example.com']
+ALLOWED_HOSTS = ['15.164.76.145', 'example.com', 'www.example.com', '127.0.0.1:8000', '127.0.0.1','localhost']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
