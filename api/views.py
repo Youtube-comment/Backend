@@ -245,3 +245,42 @@ def get_recomment_list(request):
     # 유튜브 API 응답 처리
     comment_list = response.json()
     return JsonResponse(comment_list)
+
+@csrf_exempt
+def post_comment_insert(request):
+    # 액세스 토큰 가져오기
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+    if not token:
+        return JsonResponse({'error': 'No token provided'}, status=401)
+
+    # Decode the token and retrieve the user ID from the payload
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = payload['g_id']
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'Token expired'}, status=401) 
+    except jwt.InvalidTokenError:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    # Retrieve the user object based on the user ID
+    try:
+        user = User.objects.get(g_id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=401)
+
+    # 유튜브 API 요청 보내기
+    response = requests.post('https://www.googleapis.com/youtube/v3/comments', params={
+        'part': 'snippet',
+        'access_token': user.access_token,
+    },
+        data = {
+            'snippet': {
+                "parentId": "UgxNvV9VD7PlA7gFwe54AaABAg",
+                'textOriginal': "댓글입니다.",
+            }
+        }    
+    )
+
+    # 유튜브 API 응답 처리
+    comment_list = response.json()
+    return JsonResponse(comment_list)
