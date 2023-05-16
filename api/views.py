@@ -179,6 +179,7 @@ def get_youtube_list(request):
 @csrf_exempt
 def get_comment_list(request):
     # 액세스 토큰 가져오기
+    comment_id = request.data.get('id')
     token = request.META.get('HTTP_AUTHORIZATION', None)
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
@@ -202,7 +203,7 @@ def get_comment_list(request):
     # 유튜브 API 요청 보내기
     response = requests.get('https://www.googleapis.com/youtube/v3/commentThreads', params={
         'part': 'snippet',
-        'videoId' : 'RYLWTyAq5cc',  #프론트에서 다시 videoId 돌려 받아야함
+        'videoId' : comment_id,  #프론트에서 다시 videoId 돌려 받아야함
         'textFormat': 'plainText',
         'access_token': user.access_token,
     })
