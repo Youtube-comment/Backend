@@ -216,6 +216,8 @@ def get_comment_list(request):
 def get_recomment_list(request):
     # 액세스 토큰 가져오기
     token = request.META.get('HTTP_AUTHORIZATION', None)
+    # parentid 가져오기
+    parentId = request.data.get('parentId')
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
 
@@ -238,7 +240,7 @@ def get_recomment_list(request):
     # 유튜브 API 요청 보내기
     response = requests.get('https://www.googleapis.com/youtube/v3/comments', params={
         'part': 'snippet',
-        "parentId": "Ugwc8MjIjYlmOubAqbd4AaABAg",  #프론트에서 다시 videoId 돌려 받아야함
+        "parentId": parentId, 
         'access_token': user.access_token,
     })
 
@@ -250,6 +252,10 @@ def get_recomment_list(request):
 def post_comment_insert(request):
     # 액세스 토큰 가져오기
     token = request.META.get('HTTP_AUTHORIZATION', None)
+    # parentid 가져오기
+    parentId = request.data.get('parentId')
+    # parentid 가져오기
+    textOriginal = request.data.get('textOriginal')
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
 
@@ -269,16 +275,18 @@ def post_comment_insert(request):
         return JsonResponse({'error': 'User not found'}, status=401)
 
     # 유튜브 API 요청 보내기
+    payload = {
+    'snippet': {
+        'parentId': parentId,
+        'textOriginal': textOriginal,
+        }
+    }
+
     response = requests.post('https://www.googleapis.com/youtube/v3/comments', params={
         'part': 'snippet',
         'access_token': user.access_token,
     },
-        data = {
-            'snippet': {
-                "parentId": "UgxNvV9VD7PlA7gFwe54AaABAg",
-                'textOriginal': "댓글입니다.",
-            }
-        }    
+    json=payload
     )
 
     # 유튜브 API 응답 처리
