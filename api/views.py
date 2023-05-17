@@ -179,7 +179,8 @@ def get_youtube_list(request):
 @csrf_exempt
 def get_comment_list(request):
     # 액세스 토큰 가져오기
-    comment_id = request.data.get('id')
+    data = json.loads(request.body.decode('utf-8'))
+    comment_id = data.get('id')
     token = request.META.get('HTTP_AUTHORIZATION', None)
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
@@ -217,7 +218,8 @@ def get_recomment_list(request):
     # 액세스 토큰 가져오기
     token = request.META.get('HTTP_AUTHORIZATION', None)
     # parentid 가져오기
-    parentId = request.data.get('parentId')
+    data = json.loads(request.body.decode('utf-8'))
+    parentId = data.get('parentId')
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
 
@@ -253,9 +255,10 @@ def post_comment_insert(request):
     # 액세스 토큰 가져오기
     token = request.META.get('HTTP_AUTHORIZATION', None)
     # parentid 가져오기
-    parentId = request.data.get('parentId')
+    data = json.loads(request.body.decode('utf-8'))
+    parentId = data.get('parentId')
     # parentid 가져오기
-    textOriginal = request.data.get('textOriginal')
+    textOriginal = data.get('textOriginal')
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
 
