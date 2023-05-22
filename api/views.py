@@ -16,55 +16,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 import jwt
 from django.http import JsonResponse
 
-# @csrf_exempt
-# def get_user(request):
-#     # Get the token from the request headers
-#     token = request.META.get('HTTP_AUTHORIZATION', None)
-#     if not token:
-#         return JsonResponse({'error': 'No token provided'}, status=401)
-
-#     # Decode the token and retrieve the user ID from the payload
-#     try:
-#         payload = jwt.decode(token, 'your-secret-key', algorithms=['HS256'])
-#         user_id = payload['user_id']
-#     except jwt.ExpiredSignatureError:
-#         return JsonResponse({'error': 'Token expired'}, status=401)
-#     except jwt.InvalidTokenError:
-#         return JsonResponse({'error': 'Invalid token'}, status=401)
-
-#     # Retrieve the user object based on the user ID
-#     try:
-#         user = User.objects.get(id=user_id)
-#     except User.DoesNotExist:
-#         return JsonResponse({'error': 'User not found'}, status=401)
-
-#     # Return the user object
-#     return JsonResponse({'user': user.username})
 @csrf_exempt
 def get_channel_id(request):
     token = request
-    print(token)
-    # if not token:
-    #     return JsonResponse({'error': 'No token provided'}, status=401)
-
-    # # Decode the token and retrieve the user ID from the payload
-    # try:
-    #     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-    #     user_id = payload['g_id']
-    #     user_mail = payload['mail']
-    # except jwt.ExpiredSignatureError:
-    #     return JsonResponse({'error': 'Token expired'}, status=401) 
-    # except jwt.InvalidTokenError:
-    #     return JsonResponse({'error': 'Invalid token'}, status=402)
-
-    # # Retrieve the user object based on the user ID
-    # try:
-    #     user = User.objects.get(g_id=user_id)
-    # except User.DoesNotExist:
-    #     return JsonResponse({'error': 'User not found'}, status=403)
-
-
-
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
           'access_token': token,
           'part': 'snippet',
