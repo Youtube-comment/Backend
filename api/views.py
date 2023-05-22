@@ -31,6 +31,19 @@ def get_channel_id(request):
     return channel_id.get('items')[0]['id']
 
 @csrf_exempt
+def get_channel_sb(request):
+    token = request
+    response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
+          'access_token': token,
+          'part': 'snippet',
+          'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
+          'mine': True,
+     })
+    
+    subscriber = response.json()
+    return JsonResponse({'data' : subscriber})
+
+@csrf_exempt
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     refresh['g_id'] = user.g_id
