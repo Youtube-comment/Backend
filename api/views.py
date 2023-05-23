@@ -20,11 +20,19 @@ from django.http import JsonResponse
 def get_channel_id(request):
     token = request
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
+<<<<<<< HEAD
+          'access_token': token,
+          'part': 'snippet',
+          'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
+          'mine': True,     
+     })
+=======
         'access_token': token,
         'part': 'snippet',
         'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
         'mine': True,
     })
+>>>>>>> bbd3bbcb3d6b5314a8d6a1ba6f64c69a9d377aaf
     
     channel_id = response.json()
     return channel_id.get('items')[0]['id']
@@ -305,6 +313,7 @@ def put_comment_update(request):
     comment_list = response.json()
     return JsonResponse(comment_list)
 
+@csrf_exempt
 def post_comment_delete(request):
     # 액세스 토큰 가져오기
     token = request.META.get('HTTP_AUTHORIZATION', None)
