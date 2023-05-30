@@ -11,4 +11,5 @@ urlpatterns = [
     path('get-recomment-list/', views.get_recomment_list), # 답글 리스트
     path('put-comment-update/', views.put_comment_update), # 댓글 및 답글 수정
     path('post-comment-delete/', views.post_comment_delete), #댓글 및 답글 삭제
+    path('get_user_profile/', views.get_user_profile), #유저 프로필 이미지 가져오기
 ]
