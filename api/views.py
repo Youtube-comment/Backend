@@ -20,22 +20,27 @@ from django.http import JsonResponse
 def get_channel_id(request):
     token = request
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
-<<<<<<< HEAD
           'access_token': token,
           'part': 'snippet',
           'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
           'mine': True,     
      })
-=======
-        'access_token': token,
-        'part': 'snippet',
-        'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
-        'mine': True,
-    })
->>>>>>> bbd3bbcb3d6b5314a8d6a1ba6f64c69a9d377aaf
     
     channel_id = response.json()
     return channel_id.get('items')[0]['id']
+
+@csrf_exempt
+def get_user_profile(request): #프로필 이미지 가져오는 함수
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+    data = json.loads(request.body.decode('utf-8'))
+    channel_id = data.get('comment_id')
+    response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
+          'access_token': token,
+          'part': 'snippet',
+          'id': channel_id,     
+     })
+    responseData = response.json()
+    return JsonResponse(responseData.items[0].snippet.thumbnails.default.url)
 
 @csrf_exempt
 def get_channel_sb(request):
