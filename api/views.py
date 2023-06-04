@@ -44,7 +44,7 @@ def get_user_profile(request): #프로필 이미지 가져오는 함수
 
 @csrf_exempt
 def get_channel_sb(request):
-    token = request
+    token = request.META.get('HTTP_AUTHORIZATION', None)
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
         'access_token': token,
         'part': 'snippet',
