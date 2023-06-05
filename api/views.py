@@ -33,8 +33,6 @@ def get_channel_id(request):
 def get_user_profile(request): #프로필 이미지 가져오는 함수
     token = request.META.get('HTTP_AUTHORIZATION', None)
     data = json.loads(request.body.decode('utf-8'))
-    channel_id = data.get('comment_id')
-    token = request.META.get('HTTP_AUTHORIZATION', None)
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
 
@@ -55,7 +53,7 @@ def get_user_profile(request): #프로필 이미지 가져오는 함수
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
           'access_token': user.access_token,
           'part': 'snippet',
-          'id': channel_id,     
+          'id': user.channel_id,     
      })
     responseData = response.json()
     return JsonResponse(responseData.items[0].snippet.thumbnails.default.url)
@@ -82,7 +80,7 @@ def get_channel_sb(request):
         return JsonResponse({'error': 'User not found'}, status=401)
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
         'access_token': user.access_token,
-        'part': 'snippet',
+        'part': 'statistics',
         'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
         'mine': True,
     })
