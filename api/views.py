@@ -33,8 +33,7 @@ def get_channel_id(request):
 def get_user_profile(request): #프로필 이미지 가져오는 함수
     token = request.META.get('HTTP_AUTHORIZATION', None)
     data = json.loads(request.body.decode('utf-8'))
-    channel_id = data.get('comment_id')
-    token = request.META.get('HTTP_AUTHORIZATION', None)
+    channel_id = data.get('channel_id')
     if not token:
         return JsonResponse({'error': 'No token provided'}, status=401)
 
