@@ -82,7 +82,7 @@ def get_channel_sb(request):
         return JsonResponse({'error': 'User not found'}, status=401)
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
         'access_token': user.access_token,
-        'part': 'snippet',
+        'part': 'statistics',
         'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
         'mine': True,
     })
