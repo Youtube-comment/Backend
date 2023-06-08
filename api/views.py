@@ -106,7 +106,6 @@ def google_login(request):
         client_id = settings.GOOGLE_CLIENT_ID
         client_secret = settings.GOOGLE_CLIENT_SECRET
         GOOGLE_CALLBACK_URI = "https://www.ideaconnect.site"
-
         token_req = requests.post(f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_CALLBACK_URI}")
         
         token_req_json = token_req.json()
