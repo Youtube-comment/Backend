@@ -20,21 +20,67 @@ from django.http import JsonResponse
 def get_channel_id(request):
     token = request
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
-        'access_token': token,
-        'part': 'snippet',
-        'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
-        'mine': True,
-    })
+          'access_token': token,
+          'part': 'snippet',
+          'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
+          'mine': True,     
+     })
     
     channel_id = response.json()
     return channel_id.get('items')[0]['id']
 
 @csrf_exempt
-def get_channel_sb(request):
-    token = request
+def get_user_profile(request): #프로필 이미지 가져오는 함수
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+    data = json.loads(request.body.decode('utf-8'))
+    if not token:
+        return JsonResponse({'error': 'No token provided'}, status=401)
+
+    # Decode the token and retrieve the user ID and email from the payload
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = payload['g_id']
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'Token expired'}, status=401) 
+    except jwt.InvalidTokenError:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    # Retrieve the user object based on the user ID
+    try:
+        user = User.objects.get(g_id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=401)
     response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
-        'access_token': token,
-        'part': 'snippet',
+          'access_token': user.access_token,
+          'part': 'snippet',
+          'id': user.channel_id,     
+     })
+    responseData = response.json()
+    return JsonResponse(responseData.items[0].snippet.thumbnails.default.url)
+
+@csrf_exempt
+def get_channel_sb(request):
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+    if not token:
+        return JsonResponse({'error': 'No token provided'}, status=401)
+
+    # Decode the token and retrieve the user ID and email from the payload
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = payload['g_id']
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'Token expired'}, status=401) 
+    except jwt.InvalidTokenError:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    # Retrieve the user object based on the user ID
+    try:
+        user = User.objects.get(g_id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=401)
+    response = requests.get('https://www.googleapis.com/youtube/v3/channels', params={
+        'access_token': user.access_token,
+        'part': 'statistics',
         'key': 'AIzaSyAVU2_JX41C1c4k3i9V2N5yDEf2_cldpLw',
         'mine': True,
     })
@@ -304,6 +350,7 @@ def put_comment_update(request):
     comment_list = response.json()
     return JsonResponse(comment_list)
 
+@csrf_exempt
 def post_comment_delete(request):
     # 액세스 토큰 가져오기
     token = request.META.get('HTTP_AUTHORIZATION', None)
