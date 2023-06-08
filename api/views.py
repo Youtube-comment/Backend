@@ -105,8 +105,7 @@ def google_login(request):
         code = data.get('code')
         client_id = settings.GOOGLE_CLIENT_ID
         client_secret = settings.GOOGLE_CLIENT_SECRET
-        GOOGLE_CALLBACK_URI = "http://localhost:3000"
-
+        GOOGLE_CALLBACK_URI = settings.GOOGLE_CALLBACK_URI
         token_req = requests.post(f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_CALLBACK_URI}")
         
         token_req_json = token_req.json()
