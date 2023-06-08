@@ -29,7 +29,7 @@ environ.Env.read_env(
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
-ALLOWED_HOSTS = ['15.164.76.145', 'example.com', 'www.example.com', '127.0.0.1', '127.0.0.1:8000', 'localhost','zzuzzu0205.github.io']
+ALLOWED_HOSTS = ['15.164.76.145', 'example.com', 'www.example.com', '127.0.0.1', '127.0.0.1:8000', 'localhost','www.ideaconnect.site']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -62,7 +62,7 @@ REST_FRAMEWORK = {
 # Google 로그인
 GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = env('GOOGLE_CLIENT_SECRET')
-GOOGLE_REDIRECT_URI = env('GOOGLE_CALLBACK_URI')
+GOOGLE_REDIRECT_URI = "https://www.ideaconnect.site"
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
