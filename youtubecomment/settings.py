@@ -62,7 +62,7 @@ REST_FRAMEWORK = {
 # Google 로그인
 GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = env('GOOGLE_CLIENT_SECRET')
-GOOGLE_REDIRECT_URI = "https://www.ideaconnect.site"
+GOOGLE_REDIRECT_URI = 'http://localhost:3000'
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -78,7 +78,7 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [
-    "*"
+    'http://localhost:3000'
 ]
 ROOT_URLCONF = 'youtubecomment.urls'
 
